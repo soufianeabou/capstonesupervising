@@ -58,19 +58,50 @@ export const AuthProvider = ({ children }) => {
     window.location.href = 'https://tour.aui.ma/api/auth/init';
   };
 
-  // Auth check: expects plain string (user name) or 'null'
+  // Auth check: Parse the full OAuth object to extract employeeId
   const isAuthenticated = async () => {
     try {
       const res = await fetch('https://tour.aui.ma/api/auth/user', {
         credentials: 'include',
       });
       const data = await res.text(); // get raw string
-      if (data && data !== 'null') {
-        setUser({ name: data });
+      console.log('Auth check response:', data);
+      
+      if (data && data !== 'null' && data.trim() !== '') {
+        try {
+          // Try to parse as JSON first (OAuth object)
+          const userData = JSON.parse(data);
+          console.log('Parsed OAuth data:', userData);
+          
+          const principal = userData.principal;
+          if (principal && principal.authorities && principal.authorities[0]) {
+            const attributes = principal.authorities[0].attributes;
+            setUser({
+              name: attributes.name,
+              employeeId: attributes.EmployeeID,
+              email: attributes.email
+            });
+            console.log('User extracted from OAuth:', {
+              name: attributes.name,
+              employeeId: attributes.EmployeeID,
+              email: attributes.email
+            });
+          } else {
+            setUser({ 
+              name: userData.name || 'Unknown User',
+              employeeId: userData.EmployeeID 
+            });
+          }
+        } catch (parseErr) {
+          // If parsing fails, treat as plain string (fallback)
+          console.log('Treating as plain string:', data);
+          setUser({ name: data });
+        }
       } else {
         setUser(null);
       }
     } catch (err) {
+      console.error('Auth check error:', err);
       setUser(null);
     } finally {
       setLoading(false);
