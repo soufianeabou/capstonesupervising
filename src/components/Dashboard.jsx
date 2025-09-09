@@ -325,11 +325,11 @@ const Dashboard = () => {
       console.log("🔄 Updating project status:", project.submissionId, "to", newStatus);
       
       // Create the updated project object
+      // Create the updated project object with only essential fields
       const updatedProject = {
-        ...project,
+        submissionId: project.submissionId,
         status: newStatus
-      };
-      
+      };      
       // Call the update API
       const response = await fetch('https://tour.aui.ma/api/update', {
         method: 'PUT',
