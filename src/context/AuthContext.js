@@ -8,105 +8,69 @@ export const AuthProvider = ({ children }) => {
 
   // Login: redirect to the backend init endpoint
   const login = () => {
-    console.log('Redirecting to login...');
-    window.location.href = 'https://tour.aui.ma/api/auth/init';
+    window.location.href = '/api/auth/init';
   };
 
-  // Auth check: test different possible response formats
+  // Auth check: expects complex OAuth object structure
   const isAuthenticated = async () => {
-    console.log('Starting authentication check...');
     try {
-      const res = await fetch('https://tour.aui.ma/api/auth/user', {
+      const res = await fetch('/api/auth/user', {
         credentials: 'include',
       });
       
-      console.log('Response status:', res.status);
-      console.log('Response headers:', [...res.headers.entries()]);
-      
       const data = await res.text();
-      console.log('Raw response data:', data);
-      console.log('Response length:', data.length);
-      console.log('Response type:', typeof data);
+      console.log('Auth response:', data);
       
       if (data && data !== 'null' && data.trim() !== '') {
-        console.log('Data exists, attempting to parse...');
-        
-        // Try to parse as JSON first
         try {
+          // Parse the complex OAuth JSON structure
           const userData = JSON.parse(data);
-          console.log('Successfully parsed JSON:', userData);
+          console.log('Parsed user data:', userData);
           
-          // Check if it's the complex OAuth structure
-          if (userData.principal && userData.principal.authorities && userData.principal.authorities[0]) {
-            console.log('Found OAuth structure');
-            const attributes = userData.principal.authorities[0].attributes;
-            console.log('Extracted attributes:', attributes);
+          // Extract from the nested structure
+          const principal = userData.principal;
+          if (principal && principal.authorities && principal.authorities[0]) {
+            const attributes = principal.authorities[0].attributes;
+            console.log('User attributes:', attributes);
             
-            const userObj = {
+            setUser({
               name: attributes.name,
               employeeId: attributes.EmployeeID,
               email: attributes.email
-            };
-            console.log('Setting user object:', userObj);
-            setUser(userObj);
-          }
-          // Check if it's a simple object
-          else if (userData.name || userData.EmployeeID) {
-            console.log('Found simple user object');
-            const userObj = {
-              name: userData.name,
+            });
+          } else {
+            // Fallback parsing for simple structure
+            setUser({ 
+              name: userData.name || 'Unknown User',
               employeeId: userData.EmployeeID,
               email: userData.email
-            };
-            console.log('Setting simple user object:', userObj);
-            setUser(userObj);
-          }
-          // If it's just a string name
-          else if (typeof userData === 'string') {
-            console.log('Found string response:', userData);
-            setUser({ name: userData });
-          }
-          else {
-            console.log('Unknown JSON structure:', userData);
-            setUser({ name: 'Unknown User', data: userData });
+            });
           }
         } catch (parseErr) {
-          console.log('Not JSON, treating as string:', parseErr);
-          // If it's not JSON, treat as plain string (name)
+          console.log('Treating as plain string:', data);
+          // Fallback to string if not JSON
           setUser({ name: data.trim() });
         }
       } else {
-        console.log('No valid data, user not authenticated');
+        console.log('No authentication data found');
         setUser(null);
       }
     } catch (err) {
-      console.error('Auth check failed:', err);
+      console.error('Auth check error:', err);
       setUser(null);
     } finally {
-      console.log('Auth check complete, setting loading to false');
       setLoading(false);
     }
   };
 
   // Logout: redirect to logout endpoint
   const logout = () => {
-    console.log('Logging out...');
-    window.location.href = "https://tour.aui.ma/api/logout";
+    window.location.href = "/api/logout";
   };
 
   useEffect(() => {
-    console.log('AuthProvider mounted, checking authentication...');
     isAuthenticated();
   }, []);
-
-  // Log state changes
-  useEffect(() => {
-    console.log('User state changed:', user);
-  }, [user]);
-
-  useEffect(() => {
-    console.log('Loading state changed:', loading);
-  }, [loading]);
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout }}>
