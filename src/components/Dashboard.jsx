@@ -55,6 +55,39 @@ const Navbar = ({ supervisorName }) => {
   );
 };
 
+// Authentication Required Component
+const AuthRequired = () => {
+  const { login } = useAuth();
+  
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
+      <div className="text-center max-w-md mx-auto p-8">
+        <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+        <h3 className="text-2xl font-bold text-gray-900 mb-4">Authentication Required</h3>
+        <p className="text-gray-600 mb-6">
+          You need to authenticate with your AUI Outlook account to access the capstone supervision dashboard.
+        </p>
+        <button
+          onClick={login}
+          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center space-x-2 shadow-sm hover:shadow-md"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span>Sign in with Outlook</span>
+        </button>
+        <p className="text-xs text-gray-500 mt-4">
+          You'll be redirected to Microsoft OAuth for secure authentication
+        </p>
+      </div>
+    </div>
+  );
+};
+
 // Enhanced Capstone Card Component
 const CapstoneCard = ({ project, onStatusChange }) => {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -197,13 +230,12 @@ const CapstoneCard = ({ project, onStatusChange }) => {
 
 // Enhanced Dashboard Component
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [projectsLoading, setProjectsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('All');
 
-  // Fetch projects from API
   // Fetch projects from API
   useEffect(() => {
     console.log("🎯 Dashboard useEffect triggered");
@@ -213,22 +245,19 @@ const Dashboard = () => {
     const fetchProjects = async () => {
       if (!user) {
         console.log("❌ No user object found");
-        setError("No user authenticated");
-        setLoading(false);
-        return;
+        return; // Don't show error, just wait for auth
       }
       
       if (!user?.employeeId) {
         console.log("❌ No employeeId found in user object");
-        console.log("🔍 User object keys:", Object.keys(user));
+        console.log("�� User object keys:", Object.keys(user));
         setError("Employee ID not found");
-        setLoading(false);
         return;
       }
 
       try {
         console.log("🚀 Fetching projects for employeeId:", user.employeeId);
-        setLoading(true);
+        setProjectsLoading(true);
         setError(null);
         const response = await fetch(`https://tour.aui.ma/api/employeeID`, {
           credentials: "include",
@@ -249,12 +278,13 @@ const Dashboard = () => {
         console.error("🚨 Error fetching projects:", err);
         setError(`Error Loading Projects: ${err.message}`);
       } finally {
-        setLoading(false);
+        setProjectsLoading(false);
       }
     };
 
     fetchProjects();
   }, [user]);
+
   const handleStatusChange = (projectId, newStatus) => {
     setProjects(prevProjects =>
       prevProjects.map(project =>
@@ -279,28 +309,53 @@ const Dashboard = () => {
 
   const stats = getStats();
 
+  // Show loading while checking authentication
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading projects...</p>
+          <p className="text-gray-600">Checking authentication...</p>
         </div>
       </div>
     );
   }
 
+  // Show auth required if no user
+  if (!user) {
+    return <AuthRequired />;
+  }
+
+  // Show projects loading
+  if (projectsLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
+        <Navbar supervisorName={user?.name || 'Supervisor'} />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading projects...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if any
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
-        <div className="text-center">
-          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
+        <Navbar supervisorName={user?.name || 'Supervisor'} />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Projects</h3>
+            <p className="text-gray-500">{error}</p>
           </div>
-          <h3 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Projects</h3>
-          <p className="text-gray-500">{error}</p>
         </div>
       </div>
     );
