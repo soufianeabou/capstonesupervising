@@ -287,7 +287,7 @@ const Dashboard = () => {
         setProjectsLoading(true);
         setError(null);
         
-        const response = await fetch(`https://tour.aui.ma/api/employee/${user.employeeId}`, {
+        const response = await fetch(`https://tour.aui.ma/api/${user.employeeId}`, {
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
