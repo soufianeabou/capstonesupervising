@@ -219,14 +219,22 @@ const Dashboard = ({ supervisorName }) => {
       console.log(`Fetching projects for employee: ${user.employeeId}`);
 
       try {
-        const response = await fetch(`/${user.employeeId}`, {
+        const response = await fetch(`/api/${user.employeeId}`, {
           credentials: 'include',
         });
         
         console.log('Projects API response status:', response.status);
+        console.log('Projects API response headers:', response.headers.get('content-type'));
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          const textResponse = await response.text();
+          console.log('Non-JSON response received:', textResponse.substring(0, 200));
+          throw new Error('API returned HTML instead of JSON. Check the API endpoint.');
         }
         
         const data = await response.json();
