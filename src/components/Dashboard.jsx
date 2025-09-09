@@ -325,12 +325,18 @@ const Dashboard = () => {
       console.log("🔄 Updating project status:", project.submissionId, "to", newStatus);
       console.log("📦 Full project object:", project);
       
-      // Create the updated project object with only essential fields
+      // Create the updated project object with all required fields
       const updatedProject = {
         submissionId: project.submissionId,
-        status: newStatus
-      };
-      
+        studentId: project.studentId,
+        supervisorId: project.supervisorId,
+        term: project.term,
+        year: project.year,
+        topic: project.topic,
+        capAbstract: project.capAbstract,
+        status: newStatus,
+        submissionDate: project.submissionDate
+      };      
       console.log("📤 Sending to API:", updatedProject);
       
       // Call the update API
