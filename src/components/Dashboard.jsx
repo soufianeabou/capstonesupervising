@@ -1,50 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-
-// Mock data
-const mockProjects = [
-  { 
-    id: 1, 
-    studentName: "Soufiane Aboulhamam", 
-    title: "AI in Education", 
-    description: "Exploring AI models in learning platforms to enhance student engagement and personalized learning experiences.", 
-    status: "Pending",
-    submittedDate: "2024-03-15"
-  },
-  { 
-    id: 2, 
-    studentName: "Saad Ghajdaoui Alaoui", 
-    title: "Blockchain Finance", 
-    description: "Smart contracts for e-wallets and decentralized financial applications with enhanced security protocols.", 
-    status: "Pending",
-    submittedDate: "2024-03-14"
-  },
-  { 
-    id: 3, 
-    studentName: "Amina El Mansouri", 
-    title: "IoT Healthcare System", 
-    description: "Development of a comprehensive IoT-based patient monitoring system for remote healthcare delivery.", 
-    status: "Accepted",
-    submittedDate: "2024-03-10"
-  },
-  { 
-    id: 4, 
-    studentName: "Youssef Benali", 
-    title: "Machine Learning Trading Bot", 
-    description: "Automated trading system using deep learning algorithms for cryptocurrency market analysis and prediction.", 
-    status: "Pending",
-    submittedDate: "2024-03-16"
-  },
-  { 
-    id: 5, 
-    studentName: "Fatima Zahra Idrissi", 
-    title: "Sustainable Energy Management", 
-    description: "Smart grid optimization system for renewable energy distribution in urban environments.", 
-    status: "Denied",
-    submittedDate: "2024-03-12"
-  }
-];
 
 // Enhanced Navbar Component
 const Navbar = ({ supervisorName }) => {
@@ -153,36 +109,42 @@ const CapstoneCard = ({ project, onStatusChange }) => {
         <div className="flex justify-between items-start mb-4">
           <div className="flex-1">
             <h3 className="text-lg font-bold text-gray-900 mb-2 flex items-center space-x-2">
-              <span>{project.title}</span>
+              <span>{project.topic}</span>
             </h3>
             <div className="space-y-1">
               <p className="text-sm text-gray-600 flex items-center space-x-2">
                 <svg className="w-4 h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                 </svg>
-                <span className="font-medium text-gray-900">{project.studentName}</span>
+                <span className="font-medium text-gray-900">Student ID: {project.studentId}</span>
               </p>
               <p className="text-sm text-gray-500 flex items-center space-x-2">
                 <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <span>Submitted: {formatDate(project.submittedDate)}</span>
+                <span>Submitted: {formatDate(project.submissionDate)}</span>
+              </p>
+              <p className="text-sm text-gray-500 flex items-center space-x-2">
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                <span>Term: {project.term?.trim()}</span>
               </p>
             </div>
           </div>
-          <span className={getStatusBadge(project.status)}>
-            {getStatusIcon(project.status)}
-            <span>{project.status}</span>
+          <span className={getStatusBadge(project.status || 'Pending')}>
+            {getStatusIcon(project.status || 'Pending')}
+            <span>{project.status || 'Pending'}</span>
           </span>
         </div>
         
         <div className="mb-6">
           <p className="text-gray-700 leading-relaxed text-sm bg-gray-50 p-4 rounded-xl border border-gray-100">
-            {project.description}
+            <strong>Abstract:</strong> {project.capAbstract}
           </p>
         </div>
         
-        {project.status === 'Pending' && (
+        {(project.status === 'Pending' || !project.status) && (
           <div className="flex space-x-3">
             <button
               onClick={() => handleStatusChange('Accepted')}
@@ -221,7 +183,7 @@ const CapstoneCard = ({ project, onStatusChange }) => {
           </div>
         )}
 
-        {project.status !== 'Pending' && (
+        {project.status && project.status !== 'Pending' && (
           <div className="text-center py-2">
             <span className="text-sm text-gray-500 font-medium">
               {project.status === 'Accepted' ? '✅ Project Approved' : '❌ Project Declined'}
@@ -236,8 +198,47 @@ const CapstoneCard = ({ project, onStatusChange }) => {
 // Enhanced Dashboard Component
 const Dashboard = () => {
   const { user } = useAuth();
-  const [projects, setProjects] = useState(mockProjects);
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filter, setFilter] = useState('All');
+
+  // Fetch projects from API
+  useEffect(() => {
+    const fetchProjects = async () => {
+      if (!user?.employeeId) {
+        setError('Employee ID not found');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch(`https://tour.aui.ma/api/employeeID`, {
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Fetched projects:', data);
+        setProjects(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error('Error fetching projects:', err);
+        setError(`Error Loading Projects: ${err.message}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProjects();
+  }, [user?.employeeId]);
 
   const handleStatusChange = (projectId, newStatus) => {
     setProjects(prevProjects =>
@@ -251,17 +252,44 @@ const Dashboard = () => {
 
   const filteredProjects = projects.filter(project => {
     if (filter === 'All') return true;
-    return project.status === filter;
+    return (project.status || 'Pending') === filter;
   });
 
   const getStats = () => {
-    const pending = projects.filter(p => p.status === 'Pending').length;
+    const pending = projects.filter(p => !p.status || p.status === 'Pending').length;
     const accepted = projects.filter(p => p.status === 'Accepted').length;
     const denied = projects.filter(p => p.status === 'Denied').length;
     return { pending, accepted, denied, total: projects.length };
   };
 
   const stats = getStats();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading projects...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
+        <div className="text-center">
+          <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Projects</h3>
+          <p className="text-gray-500">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
