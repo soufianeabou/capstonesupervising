@@ -1,0 +1,41 @@
+import React, { useState } from 'react';
+import { AuthProvider } from './context/AuthContext';
+import Login from './components/Login';
+import Dashboard from './components/Dashboard';
+import './App.css';
+
+function AppContent() {
+  const [currentPage, setCurrentPage] = useState('login');
+  const [supervisorName, setSupervisorName] = useState('');
+
+  const handleLogin = (name) => {
+    setSupervisorName(name);
+    setCurrentPage('dashboard');
+  };
+
+  const handleLogout = () => {
+    setSupervisorName('');
+    setCurrentPage('login');
+  };
+
+  return (
+    <div className="App">
+      {currentPage === 'login' && (
+        <Login onLogin={handleLogin} />
+      )}
+      {currentPage === 'dashboard' && (
+        <Dashboard supervisorName={supervisorName} onLogout={handleLogout} />
+      )}
+    </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}
+
+export default App;
