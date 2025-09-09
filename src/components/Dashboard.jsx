@@ -314,7 +314,7 @@ const Dashboard = () => {
     fetchProjects();
   }, [user]);
 
-  // Handle status change with API call to /api/update
+  // Handle status change with API call to https://tour.aui.ma/api/update
   const handleStatusChange = async (project, newStatus) => {
     try {
       console.log("🔄 Updating project status:", project.submissionId, "to", newStatus);
@@ -326,7 +326,7 @@ const Dashboard = () => {
       };
       
       // Call the update API
-      const response = await fetch('/api/update', {
+      const response = await fetch('https://tour.aui.ma/api/update', {
         method: 'PUT',
         credentials: 'include',
         headers: {
