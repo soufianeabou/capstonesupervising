@@ -61,32 +61,48 @@ export const AuthProvider = ({ children }) => {
   // Auth check: Parse the full OAuth object to extract employeeId
   const isAuthenticated = async () => {
     try {
+      console.log('🔍 Starting auth check...');
       const res = await fetch('https://tour.aui.ma/api/auth/user', {
         credentials: 'include',
       });
+      console.log('📡 Response status:', res.status);
+      
       const data = await res.text(); // get raw string
-      console.log('Auth check response:', data);
+      console.log('📄 Raw response data:', data);
+      console.log('📏 Data length:', data.length);
+      console.log('📋 Data type:', typeof data);
       
       if (data && data !== 'null' && data.trim() !== '') {
+        console.log('✅ Data exists, attempting to parse...');
         try {
           // Try to parse as JSON first (OAuth object)
           const userData = JSON.parse(data);
-          console.log('Parsed OAuth data:', userData);
+          console.log('🎯 Successfully parsed JSON:', userData);
           
-          const principal = userData.principal;
-          if (principal && principal.authorities && principal.authorities[0]) {
-            const attributes = principal.authorities[0].attributes;
-            setUser({
-              name: attributes.name,
-              employeeId: attributes.EmployeeID,
-              email: attributes.email
-            });
-            console.log('User extracted from OAuth:', {
-              name: attributes.name,
-              employeeId: attributes.EmployeeID,
-              email: attributes.email
-            });
+          // Check if it has the expected OAuth structure
+          if (userData.principal && userData.principal.authorities && userData.principal.authorities[0]) {
+            console.log('🏛️ Found principal structure');
+            const attributes = userData.principal.authorities[0].attributes;
+            console.log('📋 Attributes found:', attributes);
+            
+            if (attributes && attributes.EmployeeID) {
+              console.log('🎉 Found EmployeeID:', attributes.EmployeeID);
+              setUser({
+                name: attributes.name,
+                employeeId: attributes.EmployeeID,
+                email: attributes.email
+              });
+              console.log('✅ User set successfully:', {
+                name: attributes.name,
+                employeeId: attributes.EmployeeID,
+                email: attributes.email
+              });
+            } else {
+              console.log('❌ No EmployeeID in attributes');
+              setUser({ name: attributes?.name || 'Unknown User' });
+            }
           } else {
+            console.log('🔍 No principal structure, checking direct properties');
             setUser({ 
               name: userData.name || 'Unknown User',
               employeeId: userData.EmployeeID 
@@ -94,17 +110,20 @@ export const AuthProvider = ({ children }) => {
           }
         } catch (parseErr) {
           // If parsing fails, treat as plain string (fallback)
-          console.log('Treating as plain string:', data);
-          setUser({ name: data });
+          console.log('⚠️ JSON parse failed, treating as plain string:', parseErr);
+          console.log('📝 Setting user as plain string:', data);
+          setUser({ name: data.trim() });
         }
       } else {
+        console.log('❌ No valid data received');
         setUser(null);
       }
     } catch (err) {
-      console.error('Auth check error:', err);
+      console.error('🚨 Auth check error:', err);
       setUser(null);
     } finally {
       setLoading(false);
+      console.log('🏁 Auth check completed');
     }
   };
 
@@ -116,6 +135,8 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     isAuthenticated();
   }, []);
+
+  console.log('🔄 AuthContext render - Current user state:', user);
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout }}>

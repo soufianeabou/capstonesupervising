@@ -204,33 +204,49 @@ const Dashboard = () => {
   const [filter, setFilter] = useState('All');
 
   // Fetch projects from API
+  // Fetch projects from API
   useEffect(() => {
+    console.log("🎯 Dashboard useEffect triggered");
+    console.log("👤 Current user object:", user);
+    console.log("🆔 User employeeId:", user?.employeeId);
+    
     const fetchProjects = async () => {
+      if (!user) {
+        console.log("❌ No user object found");
+        setError("No user authenticated");
+        setLoading(false);
+        return;
+      }
+      
       if (!user?.employeeId) {
-        setError('Employee ID not found');
+        console.log("❌ No employeeId found in user object");
+        console.log("🔍 User object keys:", Object.keys(user));
+        setError("Employee ID not found");
         setLoading(false);
         return;
       }
 
       try {
+        console.log("🚀 Fetching projects for employeeId:", user.employeeId);
         setLoading(true);
         setError(null);
         const response = await fetch(`https://tour.aui.ma/api/employeeID`, {
-          credentials: 'include',
+          credentials: "include",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
         });
 
+        console.log("📡 API Response status:", response.status);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
-        console.log('Fetched projects:', data);
+        console.log("📊 Fetched projects data:", data);
         setProjects(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error('Error fetching projects:', err);
+        console.error("🚨 Error fetching projects:", err);
         setError(`Error Loading Projects: ${err.message}`);
       } finally {
         setLoading(false);
@@ -238,8 +254,7 @@ const Dashboard = () => {
     };
 
     fetchProjects();
-  }, [user?.employeeId]);
-
+  }, [user]);
   const handleStatusChange = (projectId, newStatus) => {
     setProjects(prevProjects =>
       prevProjects.map(project =>
