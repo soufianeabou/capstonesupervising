@@ -237,8 +237,11 @@ const Dashboard = ({ supervisorName }) => {
           throw new Error('API returned HTML instead of JSON. Check the API endpoint.');
         }
         
-        const data = await response.json();
-        console.log('Projects data received:', data);
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error("API returned non-JSON response (likely HTML error page)");
+        }
+        const data = await response.json();        console.log('Projects data received:', data);
         
         setProjects(Array.isArray(data) ? data : []);
       } catch (err) {
