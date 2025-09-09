@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 // Enhanced Navbar Component
 const Navbar = ({ supervisorName }) => {
   const { logout } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
+    navigate('/');
   };
 
   return (
@@ -52,33 +55,83 @@ const Navbar = ({ supervisorName }) => {
   );
 };
 
+// Authentication Required Component
+const AuthRequired = () => {
+  const { login } = useAuth();
+  
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
+      <div className="text-center max-w-md mx-auto p-8">
+        <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+        <h3 className="text-2xl font-bold text-gray-900 mb-4">Authentication Required</h3>
+        <p className="text-gray-600 mb-6">
+          You need to authenticate with your AUI Outlook account to access the capstone supervision dashboard.
+        </p>
+        <button
+          onClick={login}
+          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center space-x-2 shadow-sm hover:shadow-md"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          <span>Sign in with Outlook</span>
+        </button>
+        <p className="text-xs text-gray-500 mt-4">
+          You'll be redirected to Microsoft OAuth for secure authentication
+        </p>
+      </div>
+    </div>
+  );
+};
+
 // Enhanced Capstone Card Component
 const CapstoneCard = ({ project, onStatusChange }) => {
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Determine if project is pending (null status or explicitly "Pending")
+  const isPending = !project.status || project.status === 'Pending' || project.status === null;
+
   const getStatusBadge = (status) => {
     const baseClasses = "px-3 py-1 rounded-full text-sm font-semibold flex items-center space-x-1";
-    if (status === null || status === 'Pending') {
+    
+    if (!status || status === 'Pending' || status === null) {
       return `${baseClasses} bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 border border-yellow-200`;
-    } else if (status === 'Accepted' || status === 'Approved') {
-      return `${baseClasses} bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200`;
-    } else if (status === 'Denied' || status === 'Rejected') {
-      return `${baseClasses} bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border border-red-200`;
-    } else {
-      return `${baseClasses} bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800 border border-gray-200`;
+    }
+    
+    switch (status) {
+      case 'Accepted':
+        return `${baseClasses} bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200`;
+      case 'Denied':
+        return `${baseClasses} bg-gradient-to-r from-red-100 to-rose-100 text-red-800 border border-red-200`;
+      default:
+        return `${baseClasses} bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800 border border-gray-200`;
     }
   };
 
   const getStatusIcon = (status) => {
-    if (status === null || status === 'Pending') {
+    if (!status || status === 'Pending' || status === null) {
       return <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>;
-    } else if (status === 'Accepted' || status === 'Approved') {
-      return <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>;
-    } else if (status === 'Denied' || status === 'Rejected') {
-      return <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>;
-    } else {
-      return null;
     }
+    
+    switch (status) {
+      case 'Accepted':
+        return <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>;
+      case 'Denied':
+        return <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>;
+      default:
+        return null;
+    }
+  };
+
+  const getStatusText = (status) => {
+    if (!status || status === 'Pending' || status === null) {
+      return 'Pending';
+    }
+    return status;
   };
 
   const formatDate = (dateString) => {
@@ -89,20 +142,19 @@ const CapstoneCard = ({ project, onStatusChange }) => {
     });
   };
 
-  const getDisplayStatus = (status) => {
-    return status === null ? 'Pending' : status;
-  };
-
   const handleStatusChange = async (newStatus) => {
     setIsProcessing(true);
-    // Simulate processing time for better UX
-    setTimeout(() => {
-      onStatusChange(project.id, newStatus);
+    
+    try {
+      // Call the onStatusChange with the full project object and new status
+      await onStatusChange(project, newStatus);
+    } catch (error) {
+      console.error('Error updating project status:', error);
+      // You might want to show an error message to the user here
+    } finally {
       setIsProcessing(false);
-    }, 800);
+    }
   };
-
-  const isPending = project.status === null || project.status === 'Pending';
 
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg hover:border-gray-200 transition-all duration-300 transform hover:-translate-y-1">
@@ -127,24 +179,25 @@ const CapstoneCard = ({ project, onStatusChange }) => {
               </p>
               <p className="text-sm text-gray-500 flex items-center space-x-2">
                 <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v6a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                 </svg>
-                <span>Term: {project.term ? project.term.trim() : 'N/A'} {project.year ? project.year.trim() : ''}</span>
+                <span>Term: {project.term?.trim()}</span>
               </p>
             </div>
           </div>
           <span className={getStatusBadge(project.status)}>
             {getStatusIcon(project.status)}
-            <span>{getDisplayStatus(project.status)}</span>
+            <span>{getStatusText(project.status)}</span>
           </span>
         </div>
         
         <div className="mb-6">
           <p className="text-gray-700 leading-relaxed text-sm bg-gray-50 p-4 rounded-xl border border-gray-100">
-            {project.capAbstract === 'Pending' ? 'Abstract pending review...' : project.capAbstract}
+            <strong>Abstract:</strong> {project.capAbstract}
           </p>
         </div>
         
+        {/* Show Accept/Deny buttons only for pending projects */}
         {isPending && (
           <div className="flex space-x-3">
             <button
@@ -172,7 +225,7 @@ const CapstoneCard = ({ project, onStatusChange }) => {
               {isProcessing ? (
                 <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
               ) : (
                 <>
@@ -184,6 +237,7 @@ const CapstoneCard = ({ project, onStatusChange }) => {
           </div>
         )}
 
+        {/* Show status message for non-pending projects */}
         {!isPending && (
           <div className="text-center py-2">
             <span className="text-sm text-gray-500 font-medium">
@@ -197,120 +251,177 @@ const CapstoneCard = ({ project, onStatusChange }) => {
 };
 
 // Enhanced Dashboard Component
-const Dashboard = ({ supervisorName }) => {
+const Dashboard = () => {
+  const { user, loading } = useAuth();
   const [projects, setProjects] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [projectsLoading, setProjectsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState('All');
-  const { user } = useAuth();
 
-  // Fetch capstone projects from API
+  // Fetch projects from API
   useEffect(() => {
+    console.log("🎯 Dashboard useEffect triggered");
+    console.log("👤 Current user object:", user);
+    console.log("🆔 User employeeId:", user?.employeeId);
+    
     const fetchProjects = async () => {
-      console.log('User in dashboard:', user);
+      if (!user) {
+        console.log("❌ No user object found");
+        return; // Don't show error, just wait for auth
+      }
       
       if (!user?.employeeId) {
-        console.log('No employeeId found, user object:', user);
-        setError('Employee ID not found in user data');
-        setLoading(false);
+        console.log("❌ No employeeId found in user object");
+        console.log("🔍 User object keys:", Object.keys(user));
+        setError("Employee ID not found");
         return;
       }
 
-      console.log(`Fetching projects for employee: ${user.employeeId}`);
-
       try {
-        const response = await fetch(`/api/${user.employeeId}`, {
-          credentials: 'include',
-        });
+        console.log("🚀 Fetching projects for employeeId:", user.employeeId);
+        setProjectsLoading(true);
+        setError(null);
         
-        console.log('Projects API response status:', response.status);
-        console.log('Projects API response headers:', response.headers.get('content-type'));
+        const response = await fetch(`https://tour.aui.ma/api/employeeID`, {
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+
+        console.log("📡 API Response status:", response.status);
+        
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          throw new Error('API returned non-JSON response (likely HTML error page)');
+        }
         
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
-        const contentType = response.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-          const textResponse = await response.text();
-          console.log('Non-JSON response received:', textResponse.substring(0, 200));
-          throw new Error('API returned HTML instead of JSON. Check the API endpoint.');
-        }
-        
-        const data = await response.json();        console.log('Projects data received:', data);
-        
+
+        const data = await response.json();
+        console.log("📊 Fetched projects data:", data);
         setProjects(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error('Error fetching projects:', err);
-        setError(err.message);
+        console.error("🚨 Error fetching projects:", err);
+        setError(`Error Loading Projects: ${err.message}`);
       } finally {
-        setLoading(false);
+        setProjectsLoading(false);
       }
     };
 
-    if (user !== null) { // Only fetch when user state is determined (not loading)
-      fetchProjects();
-    }
+    fetchProjects();
   }, [user]);
 
-  const handleStatusChange = (projectId, newStatus) => {
-    setProjects(prevProjects =>
-      prevProjects.map(project =>
-        project.id === projectId
-          ? { ...project, status: newStatus }
-          : project
-      )
-    );
+  // Handle status change with API call to /api/update
+  const handleStatusChange = async (project, newStatus) => {
+    try {
+      console.log("🔄 Updating project status:", project.submissionId, "to", newStatus);
+      
+      // Create the updated project object
+      const updatedProject = {
+        ...project,
+        status: newStatus
+      };
+      
+      // Call the update API
+      const response = await fetch('/api/update', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedProject)
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to update project: ${response.status}`);
+      }
+      
+      // Update local state
+      setProjects(prevProjects =>
+        prevProjects.map(p =>
+          p.id === project.id
+            ? { ...p, status: newStatus }
+            : p
+        )
+      );
+      
+      console.log("✅ Project status updated successfully");
+      
+    } catch (error) {
+      console.error("❌ Error updating project status:", error);
+      throw error; // Re-throw so the component can handle it
+    }
   };
 
   const filteredProjects = projects.filter(project => {
     if (filter === 'All') return true;
-    const projectStatus = project.status === null ? 'Pending' : project.status;
-    return projectStatus === filter;
+    
+    // Handle pending status (null or 'Pending')
+    if (filter === 'Pending') {
+      return !project.status || project.status === 'Pending' || project.status === null;
+    }
+    
+    return project.status === filter;
   });
 
   const getStats = () => {
-    const pending = projects.filter(p => p.status === null || p.status === 'Pending').length;
-    const accepted = projects.filter(p => p.status === 'Accepted' || p.status === 'Approved').length;
-    const denied = projects.filter(p => p.status === 'Denied' || p.status === 'Rejected').length;
+    const pending = projects.filter(p => !p.status || p.status === 'Pending' || p.status === null).length;
+    const accepted = projects.filter(p => p.status === 'Accepted').length;
+    const denied = projects.filter(p => p.status === 'Denied').length;
     return { pending, accepted, denied, total: projects.length };
   };
 
   const stats = getStats();
 
+  // Show loading while checking authentication
   if (loading) {
     return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show auth required if no user
+  if (!user) {
+    return <AuthRequired />;
+  }
+
+  // Show projects loading
+  if (projectsLoading) {
+    return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
-        <Navbar supervisorName={supervisorName} />
-        <div className="flex items-center justify-center py-12">
+        <Navbar supervisorName={user?.name || 'Supervisor'} />
+        <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading capstone projects...</p>
+            <p className="text-gray-600">Loading projects...</p>
           </div>
         </div>
       </div>
     );
   }
 
+  // Show error if any
   if (error) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
-        <Navbar supervisorName={supervisorName} />
-        <div className="flex items-center justify-center py-12">
+        <Navbar supervisorName={user?.name || 'Supervisor'} />
+        <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Error Loading Projects</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Error Loading Projects</h3>
             <p className="text-gray-500">{error}</p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Retry
-            </button>
           </div>
         </div>
       </div>
@@ -319,7 +430,7 @@ const Dashboard = ({ supervisorName }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
-      <Navbar supervisorName={supervisorName} />
+      <Navbar supervisorName={user?.name || 'Supervisor'} />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Enhanced Header */}
@@ -420,7 +531,7 @@ const Dashboard = ({ supervisorName }) => {
           ))}
         </div>
 
-        {filteredProjects.length === 0 && !loading && (
+        {filteredProjects.length === 0 && (
           <div className="text-center py-16">
             <div className="w-20 h-20 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
               <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
