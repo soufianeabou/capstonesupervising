@@ -92,17 +92,19 @@ const AuthRequired = () => {
 const CapstoneCard = ({ project, onStatusChange }) => {
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Determine if project is pending (null status or explicitly "Pending")
-  const isPending = !project.status || project.status === 'Pending' || project.status === null;
+  // Trim status and determine if project is pending
+  const trimmedStatus = project.status?.trim();
+  const isPending = !trimmedStatus || trimmedStatus === 'Pending' || trimmedStatus === null;
 
   const getStatusBadge = (status) => {
     const baseClasses = "px-3 py-1 rounded-full text-sm font-semibold flex items-center space-x-1";
+    const cleanStatus = status?.trim();
     
-    if (!status || status === 'Pending' || status === null) {
+    if (!cleanStatus || cleanStatus === 'Pending' || cleanStatus === null) {
       return `${baseClasses} bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 border border-yellow-200`;
     }
     
-    switch (status) {
+    switch (cleanStatus) {
       case 'Accepted':
         return `${baseClasses} bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 border border-green-200`;
       case 'Denied':
@@ -113,11 +115,13 @@ const CapstoneCard = ({ project, onStatusChange }) => {
   };
 
   const getStatusIcon = (status) => {
-    if (!status || status === 'Pending' || status === null) {
+    const cleanStatus = status?.trim();
+    
+    if (!cleanStatus || cleanStatus === 'Pending' || cleanStatus === null) {
       return <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>;
     }
     
-    switch (status) {
+    switch (cleanStatus) {
       case 'Accepted':
         return <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>;
       case 'Denied':
@@ -128,10 +132,11 @@ const CapstoneCard = ({ project, onStatusChange }) => {
   };
 
   const getStatusText = (status) => {
-    if (!status || status === 'Pending' || status === null) {
+    const cleanStatus = status?.trim();
+    if (!cleanStatus || cleanStatus === 'Pending' || cleanStatus === null) {
       return 'Pending';
     }
-    return status;
+    return cleanStatus;
   };
 
   const formatDate = (dateString) => {
@@ -208,7 +213,7 @@ const CapstoneCard = ({ project, onStatusChange }) => {
               {isProcessing ? (
                 <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
               ) : (
                 <>
@@ -225,7 +230,7 @@ const CapstoneCard = ({ project, onStatusChange }) => {
               {isProcessing ? (
                 <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
               ) : (
                 <>
@@ -241,7 +246,7 @@ const CapstoneCard = ({ project, onStatusChange }) => {
         {!isPending && (
           <div className="text-center py-2">
             <span className="text-sm text-gray-500 font-medium">
-              {project.status === 'Accepted' ? '✅ Project Approved' : '❌ Project Declined'}
+              {trimmedStatus === 'Accepted' ? '✅ Project Approved' : '❌ Project Declined'}
             </span>
           </div>
         )}
@@ -272,7 +277,7 @@ const Dashboard = () => {
       
       if (!user?.employeeId) {
         console.log("❌ No employeeId found in user object");
-        console.log("🔍 User object keys:", Object.keys(user));
+        console.log("�� User object keys:", Object.keys(user));
         setError("Employee ID not found");
         return;
       }
@@ -282,7 +287,7 @@ const Dashboard = () => {
         setProjectsLoading(true);
         setError(null);
         
-        const response = await fetch(`https://tour.aui.ma/api/${user.employeeId}`, {
+        const response = await fetch(`https://tour.aui.ma/api/employee/${user.employeeId}`, {
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
@@ -314,7 +319,7 @@ const Dashboard = () => {
     fetchProjects();
   }, [user]);
 
-  // Handle status change with API call to https://tour.aui.ma/api/update
+  // Handle status change with API call to /api/update
   const handleStatusChange = async (project, newStatus) => {
     try {
       console.log("🔄 Updating project status:", project.submissionId, "to", newStatus);
@@ -342,7 +347,7 @@ const Dashboard = () => {
       // Update local state
       setProjects(prevProjects =>
         prevProjects.map(p =>
-          p.id === project.id
+          p.submissionId === project.submissionId
             ? { ...p, status: newStatus }
             : p
         )
@@ -359,18 +364,25 @@ const Dashboard = () => {
   const filteredProjects = projects.filter(project => {
     if (filter === 'All') return true;
     
-    // Handle pending status (null or 'Pending')
+    const trimmedStatus = project.status?.trim();
+    
+    // Handle pending status (null, empty, or 'Pending')
     if (filter === 'Pending') {
-      return !project.status || project.status === 'Pending' || project.status === null;
+      return !trimmedStatus || trimmedStatus === 'Pending' || trimmedStatus === null;
     }
     
-    return project.status === filter;
+    return trimmedStatus === filter;
   });
 
   const getStats = () => {
-    const pending = projects.filter(p => !p.status || p.status === 'Pending' || p.status === null).length;
-    const accepted = projects.filter(p => p.status === 'Accepted').length;
-    const denied = projects.filter(p => p.status === 'Denied').length;
+    const pending = projects.filter(p => {
+      const trimmedStatus = p.status?.trim();
+      return !trimmedStatus || trimmedStatus === 'Pending' || trimmedStatus === null;
+    }).length;
+    
+    const accepted = projects.filter(p => p.status?.trim() === 'Accepted').length;
+    const denied = projects.filter(p => p.status?.trim() === 'Denied').length;
+    
     return { pending, accepted, denied, total: projects.length };
   };
 
@@ -524,7 +536,7 @@ const Dashboard = () => {
         <div className="grid gap-6 lg:grid-cols-2">
           {filteredProjects.map((project) => (
             <CapstoneCard
-              key={project.id}
+              key={project.submissionId}
               project={project}
               onStatusChange={handleStatusChange}
             />
