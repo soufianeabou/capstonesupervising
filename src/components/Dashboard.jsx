@@ -341,7 +341,7 @@ const Dashboard = () => {
       
       // Call the update API
       const response = await fetch("https://tour.aui.ma/api/update", {
-        method: "PUT",
+        method: "POST",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
