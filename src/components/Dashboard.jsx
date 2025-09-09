@@ -213,7 +213,7 @@ const CapstoneCard = ({ project, onStatusChange }) => {
               {isProcessing ? (
                 <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
               ) : (
                 <>
@@ -230,7 +230,7 @@ const CapstoneCard = ({ project, onStatusChange }) => {
               {isProcessing ? (
                 <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
               ) : (
                 <>
@@ -323,25 +323,32 @@ const Dashboard = () => {
   const handleStatusChange = async (project, newStatus) => {
     try {
       console.log("🔄 Updating project status:", project.submissionId, "to", newStatus);
+      console.log("📦 Full project object:", project);
       
-      // Create the updated project object
       // Create the updated project object with only essential fields
       const updatedProject = {
         submissionId: project.submissionId,
         status: newStatus
-      };      
+      };
+      
+      console.log("📤 Sending to API:", updatedProject);
+      
       // Call the update API
-      const response = await fetch('https://tour.aui.ma/api/update', {
-        method: 'PUT',
-        credentials: 'include',
+      const response = await fetch("https://tour.aui.ma/api/update", {
+        method: "PUT",
+        credentials: "include",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(updatedProject)
       });
       
+      console.log("📡 API Response status:", response.status);
+      
       if (!response.ok) {
-        throw new Error(`Failed to update project: ${response.status}`);
+        const errorText = await response.text();
+        console.error("❌ API Error response:", errorText);
+        throw new Error(`Failed to update project: ${response.status} - ${errorText}`);
       }
       
       // Update local state
@@ -360,7 +367,6 @@ const Dashboard = () => {
       throw error; // Re-throw so the component can handle it
     }
   };
-
   const filteredProjects = projects.filter(project => {
     if (filter === 'All') return true;
     
