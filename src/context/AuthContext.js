@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }) => {
 
   // Logout: redirect to logout endpoint
   const logout = () => {
-    window.location.href = "/api/logout";
+    window.location.href = "/logout";
   };
 
   useEffect(() => {
