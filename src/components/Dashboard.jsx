@@ -204,7 +204,7 @@ const CapstoneCard = ({ project, onStatusChange }) => {
           project.comment && (
             <div className="mb-6">
               <p className="text-gray-700 leading-relaxed text-sm bg-blue-50 p-4 rounded-xl border border-blue-100">
-                <strong>SupervisorComment:</strong> {project.comment}
+                <strong>Supervisor Comment:</strong> {project.comment}
               </p>
             </div>
           )
@@ -562,7 +562,7 @@ const Dashboard = () => {
               </div>
             </div>
             <p className="text-xs text-gray-500">
-              © 2024 AUI. All rights reserved.
+              © 2025 AUI. All rights reserved.
             </p>
           </div>
         </div>

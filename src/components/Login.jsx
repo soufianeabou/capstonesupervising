@@ -117,7 +117,7 @@ const Login = () => {
           {/* Footer */}
           <div className="mt-8 text-center">
             <div className="flex items-center justify-center space-x-1 text-xs text-gray-500">
-              <span>© 2024</span>
+              <span>© 2025</span>
               <span className="font-medium text-blue-700">Al Akhawayn University</span>
               <span>· Capstone Supervision System</span>
             </div>
