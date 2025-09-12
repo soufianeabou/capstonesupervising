@@ -200,6 +200,15 @@ const CapstoneCard = ({ project, onStatusChange }) => {
             <strong>Abstract:</strong> {project.capAbstract}
           </p>
         </div>
+        {
+          project.comment && (
+            <div className="mb-6">
+              <p className="text-gray-700 leading-relaxed text-sm bg-blue-50 p-4 rounded-xl border border-blue-100">
+                <strong>SupervisorComment:</strong> {project.comment}
+              </p>
+            </div>
+          )
+        }
         
         {isPending && (
           <div className="space-y-4">
@@ -339,7 +348,7 @@ const Dashboard = () => {
       setProjects(prevProjects =>
         prevProjects.map(p =>
           p.submissionId === project.submissionId
-            ? { ...p, status: newStatus }
+            ? { ...p, status: newStatus, comment: comment || '' }
             : p
         )
       );
