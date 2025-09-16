@@ -57,8 +57,7 @@ const Navbar = ({ supervisorName }) => {
 
 // Authentication Required Component
 const AuthRequired = () => {
-  const { login } = useAuth();
-  
+  const {login} = useAuth();  
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
       <div className="text-center max-w-md mx-auto p-8">
@@ -288,7 +287,7 @@ const Dashboard = () => {
         setProjectsLoading(true);
         setError(null);
         
-        const response = await fetch(`https://tour.aui.ma/api/${user.employeeId}`, {
+        const response = await fetch(`https://capstone.aui.ma/api/${user.employeeId}`, {
           credentials: "include",
           headers: {
             "Content-Type": "application/json",
@@ -331,7 +330,7 @@ const Dashboard = () => {
         comment: comment || ''
       };      
       
-      const response = await fetch("https://tour.aui.ma/api/update", {
+      const response = await fetch("https://capstone.aui.ma/api/update", {
         method: "PUT",
         credentials: "include",
         headers: {
